@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>校园卡路里计算器 · 最终完整版</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Microsoft YaHei", sans-serif; }
+        body { background-color: #f8f9fa; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+        h1, h2, h3 { color: #2d3436; }
+        .subtitle { text-align: center; color: #636e72; margin-bottom: 35px; font-size: 16px; }
+        .calc-card { background: #f1f2f6; padding: 25px; border-radius: 10px; margin-bottom: 30px; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 6px; font-weight: 500; color: #2d3436; }
+        select, input, button { width: 100%; padding: 10px 12px; font-size: 15px; border: 1px solid #ddd; border-radius: 6px; }
+        button { background: #0984e3; color: white; border: none; cursor: pointer; margin-top: 8px; transition: 0.2s; }
+        button:hover { background: #0770c4; }
+        .button-group { display: flex; gap: 10px; margin-top: 8px; }
+        .button-group button { flex: 1; margin-top: 0; }
+        .btn-clear { background: #e17055; }
+        .btn-clear:hover { background: #c95e45; }
+        .btn-recommend { background: #00b894; margin: 15px 0 10px; }
+        .btn-recommend:hover { background: #00a381; }
+        .total { margin-top: 22px; font-size: 19px; font-weight: bold; color: #e17055; display: flex; align-items: center; justify-content: space-between; }
+        #foodRecord { margin-top: 15px; list-style: none; }
+        #foodRecord li { background: white; padding: 10px 15px; margin-bottom: 8px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .food-info { font-size: 15px; color: #2d3436; display: flex; align-items: center; gap: 6px; }
+        .delete-btn { background: #ff7675; color: white; border: none; border-radius: 4px; padding: 4px 12px; font-size: 13px; cursor: pointer; width: auto; margin: 0; }
+        .delete-btn:hover { background: #d63031; }
+        .hint-text { font-size: 13px; color: #0984e3; margin-top: 4px; }
+        .recommend-box { background: #e8f8f5; border-radius: 8px; padding: 15px; margin-top: 15px; }
+        .recommend-box h3 { color: #00b894; margin-bottom: 10px; }
+        .combo-list { display: flex; flex-direction: column; gap: 12px; }
+        .combo-card { background: white; border: 1px solid #b2dfdb; border-radius: 12px; padding: 15px; cursor: pointer; transition: 0.2s; }
+        .combo-card:hover { background: #f0fdfa; border-color: #00b894; }
+        .combo-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .combo-title { font-weight: bold; font-size: 16px; }
+        .combo-cal { color: #e17055; font-weight: bold; }
+        .combo-items { list-style: disc inside; color: #636e72; font-size: 14px; margin-left: 10px; }
+
+        .favorites-section { background: #f9f9f9; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+        .fav-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+        .fav-chip { background: white; border: 1px solid #ddd; border-radius: 20px; padding: 5px 12px; display: flex; align-items: center; gap: 5px; font-size: 14px; }
+        .fav-chip .remove-fav { cursor: pointer; color: #e17055; font-weight: bold; }
+
+        .recipe-wrap { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; margin-top: 20px; }
+        .recipe-card { border-radius: 10px; overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,0.07); transition: 0.2s; background: white; cursor: pointer; border: 1px solid #eee; }
+        .recipe-card:hover { transform: translateY(-4px); box-shadow: 0 6px 12px rgba(0,0,0,0.1); }
+        .recipe-card img { width: 100%; height: 160px; object-fit: cover; }
+        .recipe-info { padding: 16px; }
+        .recipe-info h3 { margin-bottom: 6px; font-size: 16px; }
+        .recipe-info p { color: #636e72; font-size: 13px; margin-bottom: 8px; }
+        .recipe-cal-tip { display: inline-block; font-size: 12px; color: #e17055; background: #fff0ed; padding: 2px 10px; border-radius: 20px; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: white; border-radius: 12px; padding: 30px; max-width: 500px; width: 90%; position: relative; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+        .modal-close { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #999; }
+        .modal-close:hover { color: #333; }
+        .modal-food-list { list-style: disc inside; margin: 15px 0; color: #2d3436; line-height: 1.8; }
+        .modal-import-btn { background: #00b894; color: white; border: none; padding: 10px 25px; border-radius: 20px; cursor: pointer; font-size: 16px; margin-top: 10px; }
+
+        .auth-container { max-width: 400px; margin: 0 auto; background: #f9f9f9; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-top: 20px; }
+        .auth-tabs { display: flex; margin-bottom: 20px; }
+        .auth-tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; background: #e0e0e0; border-radius: 6px 6px 0 0; }
+        .auth-tab.active { background: #0984e3; color: white; }
+        .auth-form { display: none; }
+        .auth-form.active { display: block; }
+        .error-msg { color: #e17055; font-size: 14px; margin-top: 10px; text-align: center; }
+
+        .profile-section { background: #f1f2f6; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .stat-box { background: #fff; border-radius: 8px; padding: 15px; margin-top: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .stat-box h3 { margin-bottom: 8px; font-size: 16px; }
+        .stat-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+        .surplus { font-weight: bold; }
+        .surplus.positive { color: #e17055; }
+        .surplus.negative { color: #00b894; }
+        .calendar-control { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+        .calendar-control input { width: auto; flex: 1; }
+        .calendar-control button { width: auto; }
+        #todayBtn { background: #636e72; width: auto; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 登录/注册区域 -->
+    <div id="authArea">
+        <h1>🥗 校园卡路里计算器</h1>
+        <p class="subtitle">请登录或注册新账号</p>
+        <div class="auth-container">
+            <div class="auth-tabs">
+                <div class="auth-tab active" onclick="switchAuthTab('login')">登录</div>
+                <div class="auth-tab" onclick="switchAuthTab('register')">注册</div>
+            </div>
+            <div id="loginForm" class="auth-form active">
+                <div class="form-group"><label>用户名</label><input type="text" id="loginUsername"></div>
+                <div class="form-group"><label>密码</label><input type="password" id="loginPassword"></div>
+                <button onclick="handleLogin()">登录</button>
+                <div id="loginError" class="error-msg"></div>
+            </div>
+            <div id="registerForm" class="auth-form">
+                <div class="form-group"><label>用户名</label><input type="text" id="regUsername"></div>
+                <div class="form-group"><label>密码</label><input type="password" id="regPassword"></div>
+                <div class="form-group"><label>确认密码</label><input type="password" id="regPassword2"></div>
+                <button onclick="handleRegister()">注册</button>
+                <div id="regError" class="error-msg"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主应用 -->
+    <div id="mainApp" style="display:none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h1>🥗 校园卡路里计算器</h1>
+            <button onclick="logout()" style="width:auto; background:#636e72;">退出登录</button>
+        </div>
+
+        <!-- 日历控件 -->
+        <div class="calendar-control">
+            <button onclick="changeDate(-1)">◀ 前一天</button>
+            <input type="date" id="datePicker" onchange="onDateChange()">
+            <button onclick="changeDate(1)">后一天 ▶</button>
+            <button id="todayBtn" onclick="goToToday()">回到今天</button>
+        </div>
+
+        <!-- 个人资料 -->
+        <div class="profile-section">
+            <h3>📊 我的身体数据 & 代谢</h3>
+            <div class="grid-2">
+                <div class="form-group"><label>身高 (cm)</label><input type="number" id="heightInput" value="170"></div>
+                <div class="form-group"><label>体重 (kg)</label><input type="number" id="weightInput" value="65"></div>
+                <div class="form-group"><label>年龄</label><input type="number" id="ageInput" value="25"></div>
+                <div class="form-group"><label>性别</label><select id="genderInput"><option value="male">男</option><option value="female">女</option></select></div>
+                <div class="form-group"><label>活动水平</label>
+                    <select id="activityInput">
+                        <option value="sedentary">久坐不动</option>
+                        <option value="light">轻度活动</option>
+                        <option value="moderate">中度活动</option>
+                        <option value="active">高度活动</option>
+                        <option value="very_active">非常活跃</option>
+                    </select>
+                </div>
+                <div class="form-group"><button onclick="saveProfile()">保存资料</button></div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-row"><span>基础代谢 (BMR)：</span><span id="bmrDisplay">-</span> 千卡</div>
+                <div class="stat-row"><span>每日消耗 (TDEE)：</span><span id="tdeeDisplay">-</span> 千卡</div>
+            </div>
+        </div>
+
+        <!-- 活动热量 -->
+        <div class="calc-card">
+            <h3>🏃 活动热量消耗</h3>
+            <div class="grid-2">
+                <div class="form-group"><label>活动描述</label><input type="text" id="activityDesc" placeholder="例如：跑步30分钟"></div>
+                <div class="form-group"><label>消耗热量 (千卡)</label><input type="number" id="activityCal" placeholder="0"></div>
+            </div>
+            <button onclick="addActivity()">添加活动</button>
+            <div id="activityLog" style="margin-top:10px;"></div>
+        </div>
+
+        <!-- 喜爱食物 -->
+        <div class="favorites-section">
+            <h3>❤️ 我的喜爱食物（不含主食）</h3>
+            <div class="fav-list" id="favList"></div>
+            <div style="margin-top: 15px; display: flex; gap: 10px;">
+                <select id="favSelect" style="flex:2;"><option value="">-- 手动添加喜爱 --</option></select>
+                <button onclick="addFavorite()" style="flex:1;">添加</button>
+                <button onclick="autoDetectFavorites()" style="flex:1; background:#6c5ce7;">自动检测</button>
+            </div>
+        </div>
+
+        <!-- 食堂食物 -->
+        <div class="calc-card">
+            <h2>🍱 食堂食物热量计算</h2>
+            <div class="form-group"><label>选择食物</label><select id="foodSelect"></select></div>
+            <div class="form-group">
+                <label>餐次</label>
+                <select id="mealSelect">
+                    <option value="breakfast">🌅 早餐</option>
+                    <option value="lunch" selected>☀️ 午餐</option>
+                    <option value="dinner">🌙 晚餐</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label id="quantityLabel">份数 / 重量 (克)</label>
+                <input type="number" id="weight" value="1" min="0.1" step="0.1">
+                <span id="weightHint" class="hint-text"></span>
+            </div>
+            <div class="button-group">
+                <button type="button" onclick="addFood()">➕ 添加到今日饮食</button>
+                <button type="button" class="btn-clear" onclick="clearAllRecords()">🗑️ 清空今日饮食</button>
+            </div>
+            <button type="button" class="btn-recommend" onclick="getRecommendation()">🧠 智能推荐下一餐</button>
+
+            <div class="total">
+                <span>今日总摄入：<span id="totalCal">0</span> 千卡</span>
+                <span id="surplusText" style="font-size:14px;"></span>
+            </div>
+            <ul id="foodRecord"></ul>
+
+            <div id="recommendArea" class="recommend-box" style="display: none;">
+                <h3 id="recommendTitle">💡 推荐您的下一餐</h3>
+                <div id="recommendList" class="combo-list"></div>
+            </div>
+        </div>
+
+        <!-- 统计 -->
+        <div class="calc-card">
+            <h2>📈 热量盈余统计</h2>
+            <div class="button-group">
+                <button onclick="showStats('week')">本周</button>
+                <button onclick="showStats('month')">本月</button>
+            </div>
+            <div id="statsDisplay" class="stat-box" style="margin-top:15px;">
+                <p>点击上方按钮查看统计</p>
+            </div>
+        </div>
+
+        <!-- 名人食谱 -->
+        <h2>📚 名人趣味食谱 · 点击卡片查看详情</h2>
+        <div class="recipe-wrap" id="recipeContainer"></div>
+    </div>
+
+    <!-- 食谱弹窗 -->
+    <div class="modal-overlay" id="recipeModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeRecipeModal()">&times;</span>
+            <h3 id="modalTitle"></h3>
+            <p id="modalDesc"></p>
+            <div id="modalIngredients"></div>
+            <div style="text-align: center;"><button class="modal-import-btn" onclick="importFromModal()">导入此食谱 (1份)</button></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 全局状态
+    let currentUser = null;
+    let currentDate = new Date().toISOString().slice(0,10);
+    const authArea = document.getElementById('authArea');
+    const mainApp = document.getElementById('mainApp');
+    const datePicker = document.getElementById('datePicker');
+    const totalSpan = document.getElementById('totalCal');
+    const surplusText = document.getElementById('surplusText');
+    const recordList = document.getElementById('foodRecord');
+    const recommendArea = document.getElementById('recommendArea');
+    const recommendListDiv = document.getElementById('recommendList');
+    const recommendTitle = document.getElementById('recommendTitle');
+    const recipeContainer = document.getElementById('recipeContainer');
+
+    // ==================== 认证 ====================
+    function switchAuthTab(tab) {
+        document.querySelectorAll('.auth-tab').forEach(e=>e.classList.remove('active'));
+        document.querySelectorAll('.auth-form').forEach(e=>e.classList.remove('active'));
+        if (tab==='login') {
+            document.querySelector('.auth-tab:nth-child(1)').classList.add('active');
+            document.getElementById('loginForm').classList.add('active');
+        } else {
+            document.querySelector('.auth-tab:nth-child(2)').classList.add('active');
+            document.getElementById('registerForm').classList.add('active');
+        }
+        document.getElementById('loginError').textContent='';
+        document.getElementById('regError').textContent='';
+    }
+
+    async function handleLogin() {
+        const username = document.getElementById('loginUsername').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        const errorDiv = document.getElementById('loginError');
+        errorDiv.textContent='';
+        if (!username || !password) return errorDiv.textContent='用户名和密码不能为空';
+        try {
+            const res = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username,password}) });
+            const data = await res.json();
+            if (!res.ok) return errorDiv.textContent=data.error||'登录失败';
+            currentUser = data.user;
+            localStorage.setItem('userId', currentUser.id);
+            authArea.style.display='none';
+            mainApp.style.display='block';
+            await initApp();
+        } catch(e) { errorDiv.textContent='网络错误'; }
+    }
+
+    async function handleRegister() {
+        const username = document.getElementById('regUsername').value.trim();
+        const password = document.getElementById('regPassword').value;
+        const password2 = document.getElementById('regPassword2').value;
+        const errorDiv = document.getElementById('regError');
+        errorDiv.textContent='';
+        if (!username||!password||!password2) return errorDiv.textContent='所有字段均为必填';
+        if (password.length<6) return errorDiv.textContent='密码至少6位';
+        if (password!==password2) return errorDiv.textContent='两次密码不一致';
+        try {
+            const res = await fetch('/api/register', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username,password}) });
+            const data = await res.json();
+            if (!res.ok) return errorDiv.textContent=data.error||'注册失败';
+            alert('注册成功！请登录');
+            switchAuthTab('login');
+            document.getElementById('loginUsername').value=username;
+            document.getElementById('loginPassword').value='';
+        } catch(e) { errorDiv.textContent='网络错误'; }
+    }
+
+    function logout() {
+        currentUser=null;
+        localStorage.removeItem('userId');
+        mainApp.style.display='none';
+        authArea.style.display='block';
+    }
+
+    async function initApp() {
+        datePicker.value = currentDate;
+        await loadProfile();
+        await loadFoods();
+        await refreshFavorites();
+        await refreshRecords();
+        await loadActivity();
+        await loadRecipes();
+        updateDailySummary();
+    }
+
+    // ==================== 日期 ====================
+    function goToToday() { currentDate=new Date().toISOString().slice(0,10); datePicker.value=currentDate; loadCurrentDate(); }
+    function changeDate(offset) { const d=new Date(currentDate); d.setDate(d.getDate()+offset); currentDate=d.toISOString().slice(0,10); datePicker.value=currentDate; loadCurrentDate(); }
+    function onDateChange() { currentDate=datePicker.value; loadCurrentDate(); }
+    async function loadCurrentDate() { await refreshRecords(); await loadActivity(); updateDailySummary(); }
+
+    // ==================== 个人资料 ====================
+    async function loadProfile() {
+        const res = await fetch(`/api/profile?userId=${currentUser.id}`);
+        const data = await res.json();
+        document.getElementById('heightInput').value = data.height||170;
+        document.getElementById('weightInput').value = data.weight||65;
+        document.getElementById('ageInput').value = data.age||25;
+        document.getElementById('genderInput').value = data.gender||'male';
+        document.getElementById('activityInput').value = data.activity_level||'sedentary';
+        document.getElementById('bmrDisplay').textContent = data.bmr;
+        document.getElementById('tdeeDisplay').textContent = data.tdee;
+    }
+    async function saveProfile() {
+        const height = parseFloat(document.getElementById('heightInput').value);
+        const weight = parseFloat(document.getElementById('weightInput').value);
+        const age = parseInt(document.getElementById('ageInput').value);
+        const gender = document.getElementById('genderInput').value;
+        const activity_level = document.getElementById('activityInput').value;
+        await fetch('/api/profile', { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({userId:currentUser.id, height, weight, age, gender, activity_level}) });
+        await loadProfile();
+        updateDailySummary();
+    }
+
+    // ==================== 活动 ====================
+    async function addActivity() {
+        const activity = document.getElementById('activityDesc').value.trim();
+        const caloriesBurned = parseFloat(document.getElementById('activityCal').value);
+        if (!activity || isNaN(caloriesBurned)) return alert('请输入活动描述和消耗热量');
+        await fetch('/api/activity', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({userId:currentUser.id, activity, caloriesBurned, date:currentDate}) });
+        document.getElementById('activityDesc').value='';
+        document.getElementById('activityCal').value='';
+        await loadActivity();
+        updateDailySummary();
+    }
+    async function loadActivity() {
+        const res = await fetch(`/api/activity?userId=${currentUser.id}&date=${currentDate}`);
+        const data = await res.json();
+        const container = document.getElementById('activityLog');
+        container.innerHTML = data.logs.length===0 ? '<p>今日无活动记录</p>' : data.logs.map(l=>`<div>🏃 ${l.activity} - ${l.calories_burned} 千卡</div>`).join('');
+    }
+
+    // ==================== 总览 ====================
+    async function updateDailySummary() {
+        const profileRes = await fetch(`/api/profile?userId=${currentUser.id}`);
+        const profile = await profileRes.json();
+        const intakeRes = await fetch(`/api/total?userId=${currentUser.id}&date=${currentDate}`);
+        const intake = (await intakeRes.json()).total;
+        const activityRes = await fetch(`/api/activity?userId=${currentUser.id}&date=${currentDate}`);
+        const activity = (await activityRes.json()).total;
+        const tdee = profile.tdee;
+        const surplus = tdee + activity - intake;
+        const sign = surplus>=0 ? '缺口' : '盈余';
+        totalSpan.textContent = `${intake} 千卡`;
+        surplusText.textContent = `热量${sign} ${Math.abs(surplus)} 千卡`;
+    }
+
+    // ==================== 统计 ====================
+    async function showStats(period) {
+        const res = await fetch(`/api/stats?userId=${currentUser.id}&period=${period}`);
+        const data = await res.json();
+        const surplus = data.surplus;
+        const sign = surplus>=0 ? '缺口' : '盈余';
+        document.getElementById('statsDisplay').innerHTML = `
+            <div class="stat-row"><span>总摄入：</span><span>${data.totalIntake} 千卡</span></div>
+            <div class="stat-row"><span>总消耗 (TDEE)：</span><span>${data.totalTDEE} 千卡</span></div>
+            <div class="stat-row"><span>活动消耗：</span><span>${data.totalActivity} 千卡</span></div>
+            <div class="stat-row"><span>热量${sign}：</span><span class="surplus ${surplus>=0?'positive':'negative'}">${Math.abs(surplus)} 千卡</span></div>
+            <div class="stat-row"><span>统计天数：</span><span>${data.days} 天</span></div>
+        `;
+    }
+
+    // ==================== 食物列表 ====================
+    async function loadFoods() {
+        const res = await fetch('/api/foods');
+        const foods = await res.json();
+        const select = document.getElementById('foodSelect');
+        select.innerHTML = '';
+        foods.forEach(food => {
+            const opt = document.createElement('option');
+            opt.value = food.id;
+            opt.textContent = food.name + (food.is_set ? '（按份）' : `（按克，1g≈${food.cal_per_gram}千卡）`);
+            opt.setAttribute('data-cal-per-gram', food.cal_per_gram);
+            opt.setAttribute('data-is-set', food.is_set);
+            opt.setAttribute('data-category', food.category);
+            opt.setAttribute('data-default-grams', food.default_grams||0);
+            select.appendChild(opt);
+        });
+        updateInputState();
+    }
+    document.getElementById('foodSelect').addEventListener('change', updateInputState);
+    function updateInputState() {
+        const selected = document.getElementById('foodSelect').options[document.getElementById('foodSelect').selectedIndex];
+        if (!selected) return;
+        const isSet = selected.getAttribute('data-is-set')==='1';
+        const qLabel = document.getElementById('quantityLabel');
+        const wHint = document.getElementById('weightHint');
+        const wInput = document.getElementById('weight');
+        if (isSet) {
+            qLabel.textContent = '份数';
+            wHint.textContent = '输入份数，1份为基准';
+            wInput.value = 1; wInput.min = 1; wInput.step = 1;
+        } else {
+            qLabel.textContent = '食用重量（克）';
+            wHint.textContent = '';
+            wInput.value = 100; wInput.min = 1; wInput.step = 1;
+        }
+    }
+
+    // ==================== 饮食记录 ====================
+    async function refreshRecords() {
+        if (!currentUser) return;
+        const res = await fetch(`/api/records?userId=${currentUser.id}&date=${currentDate}`);
+        const records = await res.json();
+        recordList.innerHTML = '';
+        records.forEach(rec => {
+            let gramText;
+            if (rec.grams===0) gramText='1份';
+            else if (rec.grams>0 && rec.grams<100) gramText=`${rec.grams}份`;
+            else gramText=`${rec.grams}g`;
+            let mealEmoji='☀️', mealName='午餐';
+            if (rec.meal==='breakfast') { mealEmoji='🌅'; mealName='早餐'; }
+            else if (rec.meal==='dinner') { mealEmoji='🌙'; mealName='晚餐'; }
+            const li = document.createElement('li');
+            li.innerHTML = `<span class="food-info"><span>${mealEmoji}${mealName}</span> ${rec.food_name} ${gramText} → ${rec.calories} 千卡</span>
+                <button class="delete-btn" onclick="deleteRecord(${rec.id})">删除</button>`;
+            recordList.appendChild(li);
+        });
+        updateDailySummary();
+    }
+    async function addFood() {
+        const select = document.getElementById('foodSelect');
+        const selected = select.options[select.selectedIndex];
+        if (!selected) return;
+        const calPerGram = parseFloat(selected.getAttribute('data-cal-per-gram'));
+        const isSet = selected.getAttribute('data-is-set')==='1';
+        const category = selected.getAttribute('data-category');
+        const defaultGrams = parseInt(selected.getAttribute('data-default-grams'))||0;
+        const foodName = selected.textContent.split('（')[0].trim();
+        const meal = document.getElementById('mealSelect').value;
+        const quantity = parseFloat(document.getElementById('weight').value);
+        if (isNaN(quantity)||quantity<=0) return alert('请输入有效数量');
+        let calories, gramsToStore;
+        if (isSet) {
+            let perServing = defaultGrams>0 ? calPerGram*defaultGrams : calPerGram;
+            calories = Math.round(perServing*quantity);
+            gramsToStore = Math.round(quantity);
+        } else {
+            gramsToStore = quantity;
+            calories = Math.round(calPerGram*quantity);
+        }
+        await fetch('/api/records', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({userId:currentUser.id, foodName, grams:gramsToStore, calories, category, meal, date:currentDate}) });
+        await refreshRecords();
+    }
+    async function deleteRecord(id) { await fetch(`/api/records/${id}`,{method:'DELETE'}); await refreshRecords(); }
+    async function clearAllRecords() {
+        if (!confirm('确定清空当前日期所有记录？')) return;
+        await fetch(`/api/records/clear/${currentUser.id}?date=${currentDate}`,{method:'DELETE'});
+        await refreshRecords();
+    }
+
+    // ==================== 喜爱食物 ====================
+    async function refreshFavorites() {
+        const res = await fetch(`/api/favorites?userId=${currentUser.id}`);
+        const favs = await res.json();
+        const favList = document.getElementById('favList');
+        favList.innerHTML = '';
+        favs.forEach(f => {
+            const chip = document.createElement('span');
+            chip.className = 'fav-chip';
+            chip.innerHTML = `${f.name} <span class="remove-fav" onclick="removeFavorite(${f.food_id})">✕</span>`;
+            favList.appendChild(chip);
+        });
+        const allFoods = await (await fetch('/api/foods')).json();
+        const favIds = favs.map(f=>f.food_id);
+        const favSelect = document.getElementById('favSelect');
+        favSelect.innerHTML = '<option value="">-- 手动添加喜爱 --</option>';
+        allFoods.filter(f=>f.category!=='starch' && !favIds.includes(f.id)).forEach(f=>{
+            const opt = document.createElement('option');
+            opt.value = f.id;
+            opt.textContent = f.name;
+            favSelect.appendChild(opt);
+        });
+    }
+    async function addFavorite() {
+        const foodId = parseInt(document.getElementById('favSelect').value);
+        if (!foodId) return alert('请选择食物');
+        const res = await fetch('/api/favorites', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({userId:currentUser.id, foodId}) });
+        const data = await res.json();
+        if (!data.success) alert(data.error||'添加失败');
+        await refreshFavorites();
+    }
+    async function removeFavorite(foodId) {
+        await fetch('/api/favorites', { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({userId:currentUser.id, foodId}) });
+        await refreshFavorites();
+    }
+    async function autoDetectFavorites() {
+        const res = await fetch('/api/favorites/auto-detect', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({userId:currentUser.id}) });
+        const data = await res.json();
+        if (data.added && data.added.length>0) {
+            alert(`自动检测到 ${data.added.length} 种喜爱食物：${data.added.map(a=>a.food_name).join('、')}`);
+        } else {
+            alert('没有新检测到的高频食物（一周≥4次，且非主食）');
+        }
+        await refreshFavorites();
+    }
+
+    // ==================== 智能推荐 ====================
+    async function getRecommendation() {
+        if (!currentUser) return;
+        const res = await fetch(`/api/recommend?userId=${currentUser.id}`);
+        const data = await res.json();
+        if (data.recommendations.length===0) return alert('今日热量摄入已足够！');
+        const mealSelect = document.getElementById('mealSelect');
+        mealSelect.value = data.nextMeal;
+        const mealNames = { breakfast:'🌅 早餐', lunch:'☀️ 午餐', dinner:'🌙 晚餐' };
+        recommendTitle.textContent = data.todayComplete ? `💡 今日三餐已完成，但仍可推荐 ${mealNames[data.nextMeal]} 选择` : `💡 推荐您的${mealNames[data.nextMeal]}搭配`;
+        recommendListDiv.innerHTML = '';
+        data.recommendations.forEach(combo => {
+            const card = document.createElement('div');
+            card.className = 'combo-card';
+            card.innerHTML = `
+                <div class="combo-header">
+                    <span class="combo-title">${combo.isFavorite?'❤️ ':''}组合套餐</span>
+                    <span class="combo-cal">🔥 ${combo.totalCalories} 千卡</span>
+                </div>
+                <ul class="combo-items">${combo.items.map(i=>`<li>${i.name} (${i.grams}g) - ${i.calories} 千卡</li>`).join('')}</ul>
+            `;
+            card.addEventListener('click', async () => {
+                for (const item of combo.items) {
+                    await fetch('/api/records', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({userId:currentUser.id, foodName:item.name, grams:item.grams, calories:item.calories, category:item.category, meal:data.nextMeal, date:currentDate}) });
+                }
+                await refreshRecords();
+                recommendArea.style.display = 'none';
+            });
+            recommendListDiv.appendChild(card);
+        });
+        recommendArea.style.display = 'block';
+    }
+
+    // ==================== 名人食谱 ====================
+    const recipeDetails = {
+        '爱因斯坦极简餐':{ description:'极简饮食，让大脑保持清晰专注。', ingredients:['黑咖啡','2个水煮蛋','全麦面包'] },
+        '奥巴马健身餐':{ description:'低脂高蛋白，保持精力与良好体态。', ingredients:['烤三文鱼','西兰花','糙米'] },
+        '村上春树长跑者食谱':{ description:'配合马拉松，长期清淡自律。', ingredients:['蔬菜沙拉','意大利面','橄榄油'] },
+        '希特勒素食餐':{ description:'晚年素食为主，清淡温补。', ingredients:['蔬菜浓汤','油蘸土豆','水煮蛋','水果沙拉'] },
+        '墨索里尼大蒜沙拉':{ description:'极简晚餐，气味浓烈但自律。', ingredients:['生大蒜沙拉','烤土豆','茅屋奶酪'] },
+        'C罗高蛋白餐':{ description:'高蛋白训练餐，助力肌肉恢复。', ingredients:['烤鸡胸','藜麦','蔬菜沙拉','水煮蛋'] },
+        '梅西地中海餐':{ description:'地中海饮食，健康抗氧化。', ingredients:['煎三文鱼','牛油果沙拉','烤红薯'] },
+        '詹姆斯低碳水餐':{ description:'天然原型饮食，低碳水高蛋白。', ingredients:['烤鸡胸','藜麦','混合蔬菜（橄榄油调味）'] },
+        '科比极致控脂餐':{ description:'原始人饮食法，体脂常年<6%的秘密。', ingredients:['烤三文鱼','蒸西兰花','少量藜麦'] },
+        '马斯克肉食餐':{ description:'食肉为主，极简高效的能量炸弹。', ingredients:['草饲牛排','煎蛋','黑咖啡'] },
+        '黄仁勋米线餐':{ description:'接地气，偏爱家常风味。', ingredients:['小锅米线','普洱茶'] }
+    };
+    let currentModalFood = null;
+    function openRecipeModal(food) {
+        currentModalFood = food;
+        const detail = recipeDetails[food.name]||{ description:'暂无描述', ingredients:[] };
+        document.getElementById('modalTitle').textContent = food.name;
+        document.getElementById('modalDesc').textContent = detail.description;
+        const ingDiv = document.getElementById('modalIngredients');
+        ingDiv.innerHTML = '<h4>🥘 包含食材：</h4><ul class="modal-food-list">'+detail.ingredients.map(i=>`<li>${i}</li>`).join('')+'</ul>';
+        document.getElementById('recipeModal').classList.add('active');
+    }
+    function closeRecipeModal() { document.getElementById('recipeModal').classList.remove('active'); currentModalFood=null; }
+    async function importFromModal() {
+        if (!currentModalFood) return;
+        const meal = document.getElementById('mealSelect').value;
+        await fetch('/api/records', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({userId:currentUser.id, foodName:currentModalFood.name, grams:1, calories:Math.round(currentModalFood.cal_per_gram), category:currentModalFood.category, meal, date:currentDate}) });
+        await refreshRecords();
+        closeRecipeModal();
+    }
+    document.getElementById('recipeModal').addEventListener('click', function(e) { if (e.target===this) closeRecipeModal(); });
+
+    async function loadRecipes() {
+        const res = await fetch('/api/foods');
+        const foods = await res.json();
+        const celebrityFoods = foods.filter(f=>f.source==='celebrity');
+        recipeContainer.innerHTML = '';
+        const imgMap = {
+            '爱因斯坦极简餐':292, '奥巴马健身餐':429, '村上春树长跑者食谱':431,
+            '希特勒素食餐':100, '墨索里尼大蒜沙拉':101, 'C罗高蛋白餐':102,
+            '梅西地中海餐':103, '詹姆斯低碳水餐':104, '科比极致控脂餐':105,
+            '马斯克肉食餐':106, '黄仁勋米线餐':107
+        };
+        celebrityFoods.forEach(food => {
+            const imgId = imgMap[food.name]||200;
+            const card = document.createElement('div');
+            card.className = 'recipe-card';
+            card.innerHTML = `<img src="https://picsum.photos/id/${imgId}/400/240" alt="${food.name}"><div class="recipe-info"><h3>${food.name}</h3><p>${food.category}</p><span class="recipe-cal-tip">🔥 约 ${Math.round(food.cal_per_gram)} 千卡/份</span></div>`;
+            card.addEventListener('click', ()=>openRecipeModal(food));
+            recipeContainer.appendChild(card);
+        });
+    }
+</script>
+</body>
+</html>

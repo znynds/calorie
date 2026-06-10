@@ -1,0 +1,13 @@
+services:
+  campus-calorie:
+    build: .
+    container_name: campus-calorie
+    ports:
+      - "3000:3000"
+    volumes:
+      # 持久化 SQLite 数据库文件
+      - ./calorie.db:/app/calorie.db
+      # 保留 WAL 模式辅助文件
+      - ./calorie.db-shm:/app/calorie.db-shm
+      - ./calorie.db-wal:/app/calorie.db-wal
+    restart: unless-stopped
