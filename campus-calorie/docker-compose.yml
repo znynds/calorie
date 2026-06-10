@@ -5,9 +5,11 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      # 持久化 SQLite 数据库文件
-      - ./calorie.db:/app/calorie.db
-      # 保留 WAL 模式辅助文件
-      - ./calorie.db-shm:/app/calorie.db-shm
-      - ./calorie.db-wal:/app/calorie.db-wal
+      # 整个数据目录挂载，SQLite WAL 文件自然持久化
+      - ./data:/app/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/foods',r=>process.exit(r.statusCode===200?0:1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

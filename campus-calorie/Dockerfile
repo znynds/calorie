@@ -1,7 +1,7 @@
-FROM node:18-alpine
+FROM node:18-slim
 
-# better-sqlite3 需要编译工具
-RUN apk add --no-cache python3 make g++
+# better-sqlite3 需要编译工具，Debian 系用 apt 速度快于 Alpine apk
+RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -13,8 +13,7 @@ RUN npm ci --production
 COPY server.js ./
 COPY public ./public
 
-# 数据库文件通过 volume 挂载，不打包进镜像
-# 但本地运行时需要数据库存在，首次运行会自动创建
+# 数据库通过 volume 挂载到 data/ 目录，不打包进镜像
 
 EXPOSE 3000
 

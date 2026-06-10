@@ -1,8 +1,7 @@
 node_modules
 .git
 *.md
-*.db-shm
-*.db-wal
+data/
 Dockerfile
 docker-compose.yml
 .dockerignore

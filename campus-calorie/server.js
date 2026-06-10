@@ -6,7 +6,7 @@ const bcrypt = require('bcryptjs');
 const app = express();
 const PORT = 3000;
 
-const db = new Database('calorie.db');
+const db = new Database('data/calorie.db');
 db.pragma('journal_mode = WAL');
 
 // ======================== 初始化数据库 ========================
